@@ -26,16 +26,6 @@ import scala.Tuple2;
 public class CountExample2 {
 
 	public static void main(String[] args) {
-		Logging.setLoggingDefaults();
-
-		SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("Simple Application");
-		JavaSparkContext sc = new JavaSparkContext(conf);
-
-		SQLContext sqlContext = new SQLContext(sc);
-		DataFrame df = sqlContext.read().format("com.databricks.spark.csv").option("inferSchema", "true")
-				.option("header", "true").load("src/main/resources/Wildfire_bc_2017.csv");
-		
-		String fileName = "src/main/resources/sumo-sim-out.csv";
 		
 //		ArrayList<Object> clusterArray = new ArrayList<Object>();
 		
@@ -95,8 +85,22 @@ public class CountExample2 {
 //			}
 			
 //		}
+		
+		
+		
+		
+		Logging.setLoggingDefaults();
+
+		SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("Simple Application");
+		JavaSparkContext sc = new JavaSparkContext(conf);
+
+		SQLContext sqlContext = new SQLContext(sc);
+		DataFrame df = sqlContext.read().format("com.databricks.spark.csv").option("inferSchema", "true")
+				.option("header", "true").load("src/main/resources/sumo-sim-out.csv");
 
 		JavaRDD<Row> javaRDD = df.javaRDD();
+		
+		
 
 		JavaPairRDD<Integer, Double> mapToPair = javaRDD
 				.mapToPair(row -> new Tuple2<Integer, Double>(row.getInt(1), row.getDouble(9)));
@@ -105,6 +109,7 @@ public class CountExample2 {
 
 		co2Sums.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
 		sc.close();
+
 
 	}
 	
