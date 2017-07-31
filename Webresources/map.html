@@ -37,24 +37,26 @@
 	
 	var popup = L.popup();
 	var clickCount = 0;
-	var A = "Start";
-	var B = "Destination";
+	var a = "Start";
+	var b = "Destination";
+	
+	var aCor;
+	var bCor; 
 
 	function onMapClick(e) {
 		clickCount++;
 		
-		
-		
+			
 		if(clickCount % 2 == 1){
 		var marker = L.marker(e.latlng);
 		
 		marker.addTo(mymap);
-		marker.bindPopup(A).openPopup();
+		marker.bindPopup('A: ' + marker.getLatLng()).openPopup();
 		}else{
 		var marker = L.marker(e.latlng);
 		
 		marker.addTo(mymap);
-		marker.bindPopup(B).openPopup();
+		marker.bindPopup('B: ' + marker.getLatLng()).openPopup();
 		}
 		
 		
