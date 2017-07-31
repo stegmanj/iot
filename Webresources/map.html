@@ -21,6 +21,7 @@
 <p>Destination: <span id = printoutb></span></p>
 <p>ClickCounter: <span id = clickprint></span></p> 
 <p>Method: <span id = methodPrint></span></p>
+<p>Lap: <span id = lapprint></span></p>
 
 
 <div id="mapid" style="width: 800px; height: 600px;"></div>
@@ -40,59 +41,91 @@
 
 	
 	var popup = L.popup();
-	var marker;
+	var markerA;
+	var markerB;
 	var clickCount = 0;
 	var a = "Start";
 	var b = "Destination";
+	var lap = 0;
 	
 	var aCor;
 	var bCor; 
 	
 
 	function onMapClick(e) {
+	
 		clickCount++;
+		var clickCheck = clickCount % 2;
+		
+		lap++;
+		if(lap>2){clickCheck = 0;}
+				
+		document.getElementById("lapprint").innerHTML = lap;	
 		document.getElementById("clickprint").innerHTML = clickCount;
 			
 		//Start Click: 
-		if(clickCount % 2 == 1){
-		marker = L.marker(e.latlng);
+		if(clickCheck == 1){
+		markerA = L.marker(e.latlng);
 		document.getElementById("methodPrint").innerHTML = "Start";
 		
 		
 		//Add marker
-		marker.addTo(mymap);
-		marker.bindPopup('<b>'+a+'</b>' + ': ' + marker.getLatLng()).openPopup();
+		markerA.addTo(mymap);
+		markerA.bindPopup('<b>'+a+'</b>' + ': ' + markerA.getLatLng()).openPopup();
 		
 		//Save Coords
-		aCor = marker.getLatLng();
+		aCor = markerA.getLatLng();
 		
 		//Printout
 		document.getElementById("printouta").innerHTML = aCor;
 		
 		}
 		
+		//BREAK
+		//BREAK
+		
 		//Destination Click:
-		if(clickCount % 2 == 0){
-		marker = L.marker(e.latlng);
-		document.getElementById("methodPrint").innerHTML = "Destination";
+		if(clickCheck == 0){
+		
+		//Check for round 3
+		if(lap>2){
+		//Remove marker
+		mymap.removeLayer(markerA);
+		
+		//Switch marker
+		markerA = markerB;
+		aCor = markerA.getLatLng();
+		document.getElementById("methodPrint").innerHTML = "Switch";
+		document.getElementById("printouta").innerHTML = aCor;
+		
+		
+		
+		}
+		
+		
+		
+		
+		markerB = L.marker(e.latlng);
 		
 		
 		//Add marker
-		marker.addTo(mymap);
-		marker.bindPopup('<b>'+b+'</b>' + ': ' + marker.getLatLng()).openPopup();
+		markerB.addTo(mymap);
+		markerB.bindPopup('<b>'+b+'</b>' + ': ' + markerB.getLatLng()).openPopup();
 		
 		//Save Coords
-		bCor = marker.getLatLng();
+		bCor = markerB.getLatLng();
 		
 		//Printout
 		document.getElementById("printoutb").innerHTML = bCor;
+		
+		
 				
 		}
 		
 		//Throw Error Message if ClickCount Modulus is not between 0 or 1
 		if(clickCount%2 > 1 || clickCount%2 < 0){alert("Error: Please refresh and try again! We couldn't resolve if this was the Start or Destination Click.");}
 		
-		
+	
 		
 	}
 
