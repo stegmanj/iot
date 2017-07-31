@@ -29,12 +29,17 @@ public class SumoStreamingDemo {
 	public static final String[] CSV_HEADERS_SUMO_TRACI_OUT = { "timestamp", "vehicle-id", "vehicle-type", "location-lat", "location-long",
 			"edge-id", "edge-name", "speed", "fuel-consumption", "co2-emission", "co-emission", "hc-emission", "noise-emission",
 			"nox-emission", "pmx-emission" };
+	
+//	public static final String[] CSV_HEADERS_SUMO_TRACI_OUT = { "FIRE_ID", "LATITUDE", "LONGITUDE", "IGN_DATE", "SIZE_HA", "OBJECTID" };
 
 	public static void main(String[] args) throws IOException {
 		Logging.setLoggingDefaults();
 		Logger log = LoggerFactory.getLogger(SumoStreamingDemo.class);
 
 		String fileName = "src/main/resources/sumo-sim-out.csv";
+		
+		
+//		String fileName = "src/main/resources/Wildfire_bc_2017.csv";
 
 		// Set up the parsing of the CSV file
 		log.info("Reading file {}", fileName);
@@ -44,6 +49,8 @@ public class SumoStreamingDemo {
 				.withQuote('"')
 				.parse(new FileReader(fileName))
 				.iterator();
+		
+//		System.out.println(csvIterator);
 
 		// Create a server socket that streams the contents of the file
 		AtomicInteger lastTimeStamp = new AtomicInteger(-1);
@@ -77,7 +84,7 @@ public class SumoStreamingDemo {
 		});
 
 		// Create the context with a 1 second batch size
-		SparkConf sparkConf = new SparkConf().setAppName("JavaNetworkWordCount").setMaster("local[2]");
+		SparkConf sparkConf = new SparkConf().setAppName("JavaNetworkWordCount").setMaster("local[*]");
 		JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.seconds(1));
 
 		// Create a JavaReceiverInputDStream on target ip:port and count the words in input stream of \n delimited text
