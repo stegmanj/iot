@@ -4,12 +4,15 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -22,6 +25,7 @@ import org.codehaus.jettison.json.JSONObject;
 
 import de.uniluebeck.itm.util.logging.Logging;
 import scala.Tuple2;
+import scala.Tuple7;
 
 public class CountExample2 {
 
@@ -88,6 +92,47 @@ public class CountExample2 {
 		
 		
 		
+//		String fileName= "src/main/resources/Wildfire_bc_2017.csv";
+//        File file= new File(fileName);
+//
+//        // this gives you a 2-dimensional array of strings
+//        List<List<String>> lines = new ArrayList<>();
+//        Scanner inputStream;
+//
+//        try{
+//            inputStream = new Scanner(file);
+//
+//            while(inputStream.hasNext()){
+//                String line = inputStream.next();
+//                String[] values = line.split(";");
+//                // this adds the currently parsed line to the 2-dimensional string array
+//                lines.add(Arrays.asList(values));
+//            }
+//
+//            inputStream.close();
+//        }catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
+
+        // the following code lets you iterate through the 2-dimensional array
+//        int lineNo = 1;
+//        for(List<String> line: lines) {
+//            int columnNo = 1;
+//            for (String value: line) {
+//                System.out.println("Line " + lineNo + " Column " + columnNo + ": " + value);
+//                columnNo++;
+//            }
+//            lineNo++;
+//        }
+        
+//        for (int i = 0; i < lines.size(); i++) {
+//			System.out.println(lines.get(i).get(6));
+//			lines.get(i).add(new Integer(0), fileName);
+//			System.out.println(lines.get(i).get(1));
+//			System.out.println("------------");
+//		}
+        
+		
 		
 		Logging.setLoggingDefaults();
 
@@ -96,22 +141,31 @@ public class CountExample2 {
 
 		SQLContext sqlContext = new SQLContext(sc);
 		DataFrame df = sqlContext.read().format("com.databricks.spark.csv").option("inferSchema", "true")
-				.option("header", "true").load("src/main/resources/sumo-sim-out.csv");
+				.option("header", "true").load("src/main/resources/Wildfire_bc_2017.csv");
+		
 
 		JavaRDD<Row> javaRDD = df.javaRDD();
 		
-		
+		JavaPairRDD<Double, Double> somemap = javaRDD.mapToPair(row -> new Tuple2<Double, Double> (calculateCluster(row.getDouble(1), row.getDouble(2)), row.getDouble(4)));
+		JavaPairRDD<Double, Double> somereduce = somemap.reduceByKey((a, b) -> a + b);
 
-		JavaPairRDD<Integer, Double> mapToPair = javaRDD
-				.mapToPair(row -> new Tuple2<Integer, Double>(row.getInt(1), row.getDouble(9)));
+//		JavaPairRDD<Integer, Double> mapToPair = javaRDD
+//				.mapToPair(row -> new Tuple2<Integer, Double>(row.getInt(1), row.getDouble(9)));
+//
+//		JavaPairRDD<Integer, Double> co2Sums = mapToPair.reduceByKey((a, b) -> a + b);
 
-		JavaPairRDD<Integer, Double> co2Sums = mapToPair.reduceByKey((a, b) -> a + b);
-
-		co2Sums.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
+		somereduce.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
+//		co2Sums.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
 		sc.close();
 
 
 	}
+	
+	private static double calculateCluster(double lat, double ln) {
+		return 1.0;
+	}
+	
+	
 	
 //	public void addColumn(String path,String fileName) throws IOException{
 //	    BufferedReader br=null;
