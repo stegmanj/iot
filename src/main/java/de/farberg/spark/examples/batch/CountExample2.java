@@ -44,7 +44,7 @@ public class CountExample2 {
 		Logging.setLoggingDefaults();
 
 		GraphhopperHelper helper = new GraphhopperHelper(
-				new File("src/main/resources/british-columbia-latest.osm.pbf")); // "c:\\users\\hpadmin\\Desktop\\british-columbia-latest.osm.pbf"
+				new File("src/main/resources/british-columbia-latest.osm.pbf"));
 
 		SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("Simple Application");
 		JavaSparkContext sc = new JavaSparkContext(conf);
@@ -121,6 +121,7 @@ public class CountExample2 {
 
 		staticFiles.externalLocation("Webresources");
 		Spark.post("/waypoints", (req, res) -> {
+			System.out.println("in Post req entgegennahme");
 			Gson gson = new Gson();
 			FromWebbrowser fromWebbrowser = gson.fromJson(req.body(), FromWebbrowser.class);
 
@@ -129,17 +130,26 @@ public class CountExample2 {
 
 			ToWebbrowser toWebBrowser = new ToWebbrowser();
 			toWebBrowser.waypoints = new LatLonDanger[bestPath.getPoints().size()];
+			
+			System.out.println("toWebBrowser.waypoints " + toWebBrowser.waypoints);
+			System.out.println("fromWebbrowser " + fromWebbrowser);
 
 			for (int i = 0; i < bestPath.getPoints().size(); i++) {
-				double clusterId = 1;
+				double clusterId = calculateCluster(horizontalClusterAnz, bestPath.getPoints().getLat(i),
+						bestPath.getPoints().getLon(i), latMax, latMin, lngMax, lngMin);
 				JavaPairRDD<Double, Double> filtered = reduceToHectar.filter(entry -> entry._1 == clusterId);
+				filtered.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
+				
 				if (filtered.count() > 0) {
-					Double danger = filtered.first()._2();
-
+					Double danger = filtered.first()._2;
+					System.out.println("-------DANGER: " + danger);
 					toWebBrowser.waypoints[i] = new LatLonDanger();
 					toWebBrowser.waypoints[i].lat = bestPath.getPoints().getLat(i);
+					System.out.println("-------lat: " + bestPath.getPoints().getLat(i));
 					toWebBrowser.waypoints[i].lon = bestPath.getPoints().getLon(i);
+					System.out.println("-------lon: " + bestPath.getPoints().getLon(i));
 					toWebBrowser.waypoints[i].danger = danger.doubleValue();
+					System.out.println("-------DANGER double: " + danger.doubleValue());
 				} else {
 					res.status(400);
 					return "Bad request";
