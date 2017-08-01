@@ -51,14 +51,34 @@ public class CountExample2 {
 		});
 		
 		System.out.println("LAT min " + minLatRow.getDouble(minLatRow.fieldIndex("LATITUDE")));
+		double latMin = minLatRow.getDouble(minLatRow.fieldIndex("LATITUDE"));
 		System.out.println("LAT max " + maxLatRow.getDouble(maxLatRow.fieldIndex("LATITUDE")));
+		double latMax = maxLatRow.getDouble(maxLatRow.fieldIndex("LATITUDE"));
 		
 		System.out.println("LNG min " + minLngRow.getDouble(minLatRow.fieldIndex("LONGITUDE")));
+		double lngMin = minLngRow.getDouble(minLatRow.fieldIndex("LONGITUDE"));
 		System.out.println("LNG max " + maxLngRow.getDouble(maxLatRow.fieldIndex("LONGITUDE")));
-
+		double lngMax = maxLngRow.getDouble(maxLatRow.fieldIndex("LONGITUDE"));
+		
+		double distance1 = distanceInKm(latMin, lngMin, latMin, lngMax);
+		double distance2 = distanceInKm(latMax, lngMin, latMax, lngMax);
+		
+		double finalDist = 0.0;
+		
+		if (distance1 < distance2) {
+			finalDist = distance2;
+		} else {
+			finalDist = distance1;
+		}
+		
+		int horizontalClusterAnz = (int) (finalDist / 50);
+		
+		System.out.println("Clusteranzahl: " + horizontalClusterAnz);
+		
 		JavaPairRDD<Double, Double> mapToPair = javaRDD
-				.mapToPair(row -> new Tuple2<Double, Double>(calculateCluster(row.getDouble(1), row.getDouble(2)),
-						row.getDouble(4)));
+				.mapToPair(row -> new Tuple2<Double, Double>(
+						calculateCluster(horizontalClusterAnz, row.getDouble(1), row.getDouble(2), latMax, latMin, lngMax, lngMin)
+						,row.getDouble(4)));
 		JavaPairRDD<Double, Double> reduceToHectar = mapToPair.reduceByKey((a, b) -> a + b);
 
 		reduceToHectar.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
@@ -86,22 +106,29 @@ public class CountExample2 {
 	}
 
 	private static double calculateLatAndLng(double cluster) {
+		
+		Array wp1 = [1,1];
 		double lat = 0.0;
 		double lng;
 
 		return lat;
 	}
 
-	private static double calculateCluster(double tmpLat, double tmpLng) {
-		double lng = -140;
-		double lat = 60;
-		double horizontalCluster = 25;
-		double stepVertical = 0.5;
-		double stepHorizontal = 1;
-		double lngMax = -116;
-		double lngMin = -140;
-		double latMax = 60;
-		double latMin = 48.5;
+	private static double calculateCluster(int horizontalClusterAnz, double tmpLat, double tmpLng, double latMax, double latMin, double lngMax, double lngMin) {
+		double lng = lngMin;
+		double lat = latMax;
+//		double horizontalCluster = 25;
+//		double stepVertical = 0.5;
+//		double stepHorizontal = 1;
+//		double lngMax = -116;
+//		double lngMin = -140;
+//		double latMax = 60;
+//		double latMin = 48.5;
+//		tmpLat = -109;
+//		tmpLng = 40;
+		
+		double stepHorizontal = (lngMax - lngMin) / horizontalClusterAnz;
+		double stepVertical = (latMax - latMin) / horizontalClusterAnz;
 
 		double idCtr = 1;
 
@@ -116,11 +143,11 @@ public class CountExample2 {
 			if (lat < latMin + stepVertical)
 				break;
 			lat = lat - stepVertical;
-			idCtr = idCtr + horizontalCluster;
+			idCtr = idCtr + horizontalClusterAnz;
 			// System.out.println("in second while" + idCtr);
 		}
 
-		// System.out.println(idCtr);
+		System.out.println(idCtr);
 		return idCtr;
 	}
 }
