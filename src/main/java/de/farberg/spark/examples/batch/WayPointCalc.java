@@ -75,14 +75,14 @@ public class WayPointCalc {
 		listlength = datalist.getSize();
 		
 		
-		//for(int i = 0; i<listlength; i++) {
-			//System.out.println("#" + i + "Lon: " + datalist.getLon(i) + " Lat: " + datalist.getLat(i) );
-		//}
+		for(int i = 0; i<listlength; i++) {
+			System.out.println("#" + i + "Lon: " + datalist.getLon(i) + " Lat: " + datalist.getLat(i) );
+			}
 		
 		System.out.println("Size:" + datalist.getSize());
 		//System.out.println("Lat" + datalist.getLat(1));
 		//System.out.println("Latitude" + datalist.getLatitude(1));
-		System.out.println(datalist);
+		System.out.println("Datapoints: " + datalist);
 	}
 
 	
