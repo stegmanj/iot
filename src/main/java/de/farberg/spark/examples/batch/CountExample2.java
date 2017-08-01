@@ -59,7 +59,7 @@ public class CountExample2 {
 //			System.out.println("in second while" + idCtr);
 		}
 		
-		System.out.println(idCtr);
+//		System.out.println(idCtr);
 		return idCtr;
 	}
 }
