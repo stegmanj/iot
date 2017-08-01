@@ -113,6 +113,8 @@
           center: {lat: 54, lng: -123},
           
         });
+		
+		
 		directionsDisplay.setMap(map);
 		
 		
@@ -127,6 +129,17 @@
           map: map
         });
 		heatmap.set('radius', heatmap.get('radius') ? null : 25	);
+		        map.addListener('click', function(e) {
+          placeMarkerAndPanTo(e.latLng, map);
+        });
+      }
+
+      function placeMarkerAndPanTo(latLng, map) {
+        var marker = new google.maps.Marker({
+          position: latLng,
+          map: map
+        });
+		
       }
 
        function calculateAndDisplayRoute(directionsService, directionsDisplay) {
@@ -146,6 +159,7 @@
 	  
 	  function toggleHeatmap() {
         heatmap.setMap(heatmap.getMap() ? null : map);
+		marker.setMap(null);
       }
 
       function changeGradient() {
