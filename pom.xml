@@ -85,25 +85,40 @@
 		</dependency>
 		
 		<!-- neue dep -->
-		<!--
+		
 		<dependency>
 		    <groupId>com.graphhopper</groupId>
 		    <artifactId>graphhopper</artifactId>
-		    <version>0.7.0</version>
+		    <version>0.6.0</version>
 		</dependency>
 		
 		<dependency>
-		    <groupId>com.graphhopper</groupId>
-		    <artifactId>graphhopper-core</artifactId>
-		    <version>0.9.0</version>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>1.4</version>
 		</dependency>
 		
+		<!-- Command-Line parsing -->
 		<dependency>
-		    <groupId>org.kohsuke.args4j</groupId>
-		    <artifactId>args4j-maven-plugin</artifactId>
-		    <version>2.33</version>
+			<groupId>args4j</groupId>
+			<artifactId>args4j</artifactId>
+			<version>2.0.23</version>
 		</dependency>
-		-->
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>19.0</version>
+		</dependency>
+		
+		<!-- File Problem -->
+		<!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+		<dependency>
+		    <groupId>org.apache.logging.log4j</groupId>
+		    <artifactId>log4j-core</artifactId>
+		    <version>2.5</version>
+		</dependency>
+		
 	</dependencies>
 
 	<build>
@@ -163,11 +178,11 @@
 
 					<excludes>
 						<exclude>.git/**</exclude>
-						<exclude>**/*.html</exclude>
+						<exclude>*/.html</exclude>
 						<exclude>.gitignore</exclude>
 						<exclude>README*</exclude>
-						<exclude>**/*.json</exclude>
-						<exclude>**/bower_components/**</exclude>
+						<exclude>*/.json</exclude>
+						<exclude>*/bower_components/*</exclude>
 						<exclude>.idea</exclude>
 					</excludes>
 				</configuration>
@@ -236,6 +251,11 @@
 			<id>jboss.release</id>
 			<name>JBoss releases</name>
 			<url>https://repository.jboss.org/nexus/content/groups/public/</url>
+		</repository>
+		
+		<repository>
+			<id>jsprit-releases</id>
+			<url>https://github.com/jsprit/mvn-rep/raw/master/releases</url>
 		</repository>
 
 	</repositories>
