@@ -26,20 +26,20 @@ import scala.Tuple2;
 public class SumoStreamingDemo {
 	private static final String host = "localhost";
 
-	public static final String[] CSV_HEADERS_SUMO_TRACI_OUT = { "timestamp", "vehicle-id", "vehicle-type", "location-lat", "location-long",
-			"edge-id", "edge-name", "speed", "fuel-consumption", "co2-emission", "co-emission", "hc-emission", "noise-emission",
-			"nox-emission", "pmx-emission" };
-	
-//	public static final String[] CSV_HEADERS_SUMO_TRACI_OUT = { "FIRE_ID", "LATITUDE", "LONGITUDE", "IGN_DATE", "SIZE_HA", "OBJECTID" };
+//	public static final String[] CSV_HEADERS_SUMO_TRACI_OUT = { "timestamp", "vehicle-id", "vehicle-type", "location-lat", "location-long",
+////			"edge-id", "edge-name", "speed", "fuel-consumption", "co2-emission", "co-emission", "hc-emission", "noise-emission",
+//			"nox-emission", "pmx-emission" };
+//	
+	public static final String[] CSV_HEADERS_SUMO_TRACI_OUT = { "FIRE_ID", "LATITUDE", "LONGITUDE", "IGN_DATE", "SIZE_HA", "OBJECTID" };
 
 	public static void main(String[] args) throws IOException {
 		Logging.setLoggingDefaults();
 		Logger log = LoggerFactory.getLogger(SumoStreamingDemo.class);
 
-		String fileName = "src/main/resources/sumo-sim-out.csv";
+//		String fileName = "src/main/resources/sumo-sim-out.csv";
 		
 		
-//		String fileName = "src/main/resources/Wildfire_bc_2017.csv";
+		String fileName = "src/main/resources/Wildfire_bc_2017_2.csv";
 
 		// Set up the parsing of the CSV file
 		log.info("Reading file {}", fileName);
