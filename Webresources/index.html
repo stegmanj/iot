@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>FireFighterZ</title>
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="shortcut icon" type="image/x-icon"
+	href="docs/images/favicon.ico" />
+
+<link rel="stylesheet"
+	href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css"
+	integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw=="
+	crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"
+	integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA=="
+	crossorigin=""></script>
+
+
+
+</head>
+<body>
+
+	<p>
+		Start: <span id=printouta></span>
+	</p>
+	<p>
+		Destination: <span id=printoutb></span>
+	</p>
+	<p>
+		ClickCounter: <span id=clickprint></span>
+	</p>
+	<p>
+		Method: <span id=methodPrint></span>
+	</p>
+	<p>
+		Lap: <span id=lapprint></span>
+	</p>
+
+
+	<div id="mapid" style="width: 800px; height: 600px;"></div>
+	<script>
+		var mymap = L.map('mapid').setView([ 54.000000, -127.500000 ], 6);
+
+		L
+				.tileLayer(
+						'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw',
+						{
+							maxZoom : 18,
+							attribution : 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, '
+									+ '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, '
+									+ 'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+							id : 'mapbox.streets'
+						}).addTo(mymap);
+
+		var popup = L.popup();
+		var markerA;
+		var markerB;
+		var clickCount = 0;
+		var a = "Start";
+		var b = "Destination";
+		var lap = 0;
+
+		var aCor;
+		var bCor;
+
+		function onMapClick(e) {
+
+			clickCount++;
+			var clickCheck = clickCount % 2;
+
+			lap++;
+			if (lap > 2) {
+				clickCheck = 0;
+			}
+
+			document.getElementById("lapprint").innerHTML = lap;
+			document.getElementById("clickprint").innerHTML = clickCount;
+
+			//Start Click: 
+			if (clickCheck == 1) {
+				markerA = L.marker(e.latlng);
+				document.getElementById("methodPrint").innerHTML = "Start";
+
+				//Add marker
+				markerA.addTo(mymap);
+				markerA.bindPopup(
+						'<b>' + a + '</b>' + ': ' + markerA.getLatLng())
+						.openPopup();
+
+				//Save Coords
+				aCor = markerA.getLatLng();
+
+				//Printout
+				document.getElementById("printouta").innerHTML = aCor;
+
+			}
+
+			//BREAK
+			//BREAK
+
+			//Destination Click:
+			if (clickCheck == 0) {
+
+				//Check for round 3
+				if (lap > 2) {
+					//Remove marker
+					mymap.removeLayer(markerA);
+
+					//Switch marker
+					markerA = markerB;
+					aCor = markerA.getLatLng();
+					document.getElementById("methodPrint").innerHTML = "Switch";
+					document.getElementById("printouta").innerHTML = aCor;
+				}
+
+				markerB = L.marker(e.latlng);
+
+				//Add marker
+				markerB.addTo(mymap);
+				markerB.bindPopup(
+						'<b>' + b + '</b>' + ': ' + markerB.getLatLng())
+						.openPopup();
+
+				//Save Coords
+				bCor = markerB.getLatLng();
+				
+				
+
+				//Printout
+				document.getElementById("printoutb").innerHTML = bCor;
+
+			}
+
+			//Throw Error Message if ClickCount Modulus is not between 0 or 1
+			if (clickCount % 2 > 1 || clickCount % 2 < 0) {
+				alert("Error: Please refresh and try again! We couldn't resolve if this was the Start or Destination Click.");
+			}
+
+		}
+
+		mymap.on('click', onMapClick);
+	</script>
+
+
+</body>
+</html>

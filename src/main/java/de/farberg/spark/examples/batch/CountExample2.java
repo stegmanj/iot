@@ -1,8 +1,9 @@
 package de.farberg.spark.examples.batch;
 
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.List;
+import static spark.Spark.staticFiles;
+
+import java.io.File;
+import java.io.IOException;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -12,16 +13,38 @@ import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 
+import com.google.gson.Gson;
+import com.graphhopper.PathWrapper;
+
 import de.uniluebeck.itm.util.logging.Logging;
 import scala.Tuple2;
+import spark.Spark;
 
 public class CountExample2 {
+	public static class LatLon {
+		double lat;
+		double lon;
+	}
 
-	public static void main(String[] args) {
-		
-//		List<List<Double>> list = Arrays.asList(1.38, 2.56, 4.3);
+	public static class LatLonDanger extends LatLon {
+		double danger;
+	}
+
+	public static class FromWebbrowser {
+		LatLon start;
+		LatLon dest;
+	}
+
+	public static class ToWebbrowser {
+		LatLonDanger waypoints[];
+	}
+
+	public static void main(String args[]) throws InterruptedException, IOException {
 
 		Logging.setLoggingDefaults();
+
+		GraphhopperHelper helper = new GraphhopperHelper(
+				new File("src/main/resources/british-columbia-latest.osm.pbf")); // "c:\\users\\hpadmin\\Desktop\\british-columbia-latest.osm.pbf"
 
 		SparkConf conf = new SparkConf().setMaster("local[*]").setAppName("Simple Application");
 		JavaSparkContext sc = new JavaSparkContext(conf);
@@ -31,7 +54,7 @@ public class CountExample2 {
 				.option("header", "true").load("src/main/resources/Wildfire_bc_2017_2.csv");
 
 		JavaRDD<Row> javaRDD = df.javaRDD();
-		
+
 		// Berechnung der Min- und Max-Werte für Längen- und Breitengrade
 		Row minLatRow = javaRDD.reduce((a, b) -> {
 			double lat1 = a.getDouble(a.fieldIndex("LATITUDE"));
@@ -93,9 +116,44 @@ public class CountExample2 {
 		// Reduzierung auf unterschiedliche Cluster
 		JavaPairRDD<Double, Double> reduceToHectar = mapToPair.reduceByKey((a, b) -> a + b);
 
-		reduceToHectar.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
+		// reduceToHectar.foreach(tuple -> System.out.println(tuple._1 + ": " +
+		// tuple._2));
 
-		sc.close();
+		staticFiles.externalLocation("Webresources");
+		Spark.post("/waypoints", (req, res) -> {
+			Gson gson = new Gson();
+			FromWebbrowser fromWebbrowser = gson.fromJson(req.body(), FromWebbrowser.class);
+
+			PathWrapper bestPath = helper.route(fromWebbrowser.start.lat, fromWebbrowser.start.lon,
+					fromWebbrowser.dest.lat, fromWebbrowser.dest.lon);
+
+			ToWebbrowser toWebBrowser = new ToWebbrowser();
+			toWebBrowser.waypoints = new LatLonDanger[bestPath.getPoints().size()];
+
+			for (int i = 0; i < bestPath.getPoints().size(); i++) {
+				double clusterId = 1;
+				JavaPairRDD<Double, Double> filtered = reduceToHectar.filter(entry -> entry._1 == clusterId);
+				if (filtered.count() > 0) {
+					Double danger = filtered.first()._2();
+
+					toWebBrowser.waypoints[i] = new LatLonDanger();
+					toWebBrowser.waypoints[i].lat = bestPath.getPoints().getLat(i);
+					toWebBrowser.waypoints[i].lon = bestPath.getPoints().getLon(i);
+					toWebBrowser.waypoints[i].danger = danger.doubleValue();
+				} else {
+					res.status(400);
+					return "Bad request";
+				}
+			}
+
+			res.type("application/json");
+			return gson.toJson(toWebBrowser);
+		});
+
+		while (true) {
+			Thread.sleep(1000);
+		}
+
 	}
 
 	private static double distanceInKm(double lat1, double lon1, double lat2, double lon2) {
@@ -162,7 +220,7 @@ public class CountExample2 {
 			// System.out.println("in second while" + idCtr);
 		}
 
-		System.out.println(idCtr);
+		// System.out.println(idCtr);
 		return idCtr;
 	}
 }
