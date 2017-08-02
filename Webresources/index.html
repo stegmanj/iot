@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,9 +18,11 @@
 <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"
 	integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA=="
 	crossorigin=""></script>
-<script src="http://code.jquery.com/jquery-3.2.1.slim.min.js"
+<!-- >script src="http://code.jquery.com/jquery-3.2.1.slim.min.js"
 	integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
-	crossorigin="anonymous"></script>
+	crossorigin="anonymous"></script-->
+
+<script src="./js/jquery-3.2.1.js" type="text/javascript"></script>
 
 </head>
 <body>
@@ -127,22 +130,31 @@
 
 				//Save Coords
 				bCor = markerB.getLatLng();
-				
-				var waypoints =
-				{
-					"start": {"lat": aCor.lat, "lon": aCor.lng},
-					"dest": {"lat": bCor.lat, "lon": bCor.lng}
+
+				var waypoints = {
+					"start" : {
+						"lat" : aCor.lat,
+						"lon" : aCor.lng
+					},
+					"dest" :  {
+						"lat" : bCor.lat,
+						"lon" : bCor.lng
+					}
 				};
-				
+
 				$.ajax({
-			        type: "POST",
-			        url: "/waypoints",
-			        data: waypoints,
-			        contentType: "application/json; charset=utf-8",
-			        dataType: "json",
-			        success: function(data){alert(data);},
-			        failure: function(errMsg){alert(errMsg);}
-			  	});
+					type : "POST",
+					url : "http://localhost:4567/waypoints",
+					data : JSON.stringify(waypoints),
+					contentType : "application/json; charset=utf-8",
+					dataType : "json",
+					success : function(data) {
+						console.log(data)
+					},
+					error : function(errMsg) {
+						console.log(errMsg)
+					}
+				});
 
 				//Printout
 				document.getElementById("printoutb").innerHTML = bCor;

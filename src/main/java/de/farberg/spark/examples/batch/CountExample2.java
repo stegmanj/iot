@@ -4,6 +4,8 @@ import static spark.Spark.staticFiles;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -15,6 +17,7 @@ import org.apache.spark.sql.SQLContext;
 
 import com.google.gson.Gson;
 import com.graphhopper.PathWrapper;
+import com.graphhopper.util.shapes.GHPoint3D;
 
 import de.uniluebeck.itm.util.logging.Logging;
 import scala.Tuple2;
@@ -119,37 +122,51 @@ public class CountExample2 {
 		// reduceToHectar.foreach(tuple -> System.out.println(tuple._1 + ": " +
 		// tuple._2));
 
-//		staticFiles.externalLocation("/Webresources");
-//		Spark.post("/test", (request, response) -> {
-//		    String a, b, c;
-//		    a = request.queryParams("txt_username");
-//		    b = request.queryParams("txt_password");
-//		    c = request.queryParams("txt_memberid");
-//		    return "Hallo Welt";
-//		});
-		
+		// staticFiles.externalLocation("/Webresources");
+		// Spark.post("/test", (request, response) -> {
+		// String a, b, c;
+		// a = request.queryParams("txt_username");
+		// b = request.queryParams("txt_password");
+		// c = request.queryParams("txt_memberid");
+		// return "Hallo Welt";
+		// });
+
 		staticFiles.externalLocation("Webresources");
 		Spark.post("/waypoints", (req, res) -> {
 			System.out.println("in Post req");
 			Gson gson = new Gson();
+
+			System.out.println("json from web" + req.body());
+
 			FromWebbrowser fromWebbrowser = gson.fromJson(req.body(), FromWebbrowser.class);
 
 			PathWrapper bestPath = helper.route(fromWebbrowser.start.lat, fromWebbrowser.start.lon,
 					fromWebbrowser.dest.lat, fromWebbrowser.dest.lon);
 
+			Map<String, GHPoint3D> tmp = new HashMap<>();
+			for (GHPoint3D point3d : bestPath.getPoints()) {
+				String key = "" + calculateCluster(horizontalClusterAnz, point3d.getLat(), point3d.getLon(), latMax,
+						latMin, lngMax, lngMin);
+				tmp.put(key, point3d);
+				System.out.println("Adding " + key + " with " +point3d.toString());
+			}
+
 			ToWebbrowser toWebBrowser = new ToWebbrowser();
-			toWebBrowser.waypoints = new LatLonDanger[bestPath.getPoints().size()];
-			
+			toWebBrowser.waypoints = new LatLonDanger[tmp.size()];
+
 			System.out.println("toWebBrowser.waypoints " + toWebBrowser.waypoints);
 			System.out.println("fromWebbrowser " + fromWebbrowser);
 
-			for (int i = 0; i < bestPath.getPoints().size(); i++) {
-				double clusterId = calculateCluster(horizontalClusterAnz, bestPath.getPoints().getLat(i),
-						bestPath.getPoints().getLon(i), latMax, latMin, lngMax, lngMin);
+			int i = -1;
+			for (GHPoint3D point : tmp.values()) {
+				++i;
+				double clusterId = calculateCluster(horizontalClusterAnz, point.getLat(), point.getLon(), latMax,
+						latMin, lngMax, lngMin);
 				JavaPairRDD<Double, Double> filtered = reduceToHectar.filter(entry -> entry._1 == clusterId);
-//				JavaPairRDD<Double, Double> redFiltered = filtered.reduceByKey((a, b) -> a + b);
+				// JavaPairRDD<Double, Double> redFiltered = filtered.reduceByKey((a, b) -> a +
+				// b);
 				filtered.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
-				
+
 				if (filtered.count() > 0) {
 					Double danger = filtered.first()._2;
 					System.out.println("-------DANGER: " + danger);
@@ -160,10 +177,9 @@ public class CountExample2 {
 					System.out.println("-------lon: " + bestPath.getPoints().getLon(i));
 					toWebBrowser.waypoints[i].danger = danger.doubleValue();
 					System.out.println("-------DANGER double: " + danger.doubleValue());
-				} /*else {
-					res.status(400);
-					return "Bad request";
-				}*/
+				} /*
+					 * else { res.status(400); return "Bad request"; }
+					 */
 			}
 
 			res.type("application/json");
