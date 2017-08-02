@@ -1,5 +1,3 @@
-package de.farberg.spark.examples.batch;
-
 import static spark.Spark.staticFiles;
 
 import java.io.File;
@@ -14,7 +12,6 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
-import org.mortbay.util.ajax.JSON;
 
 import com.google.gson.Gson;
 import com.graphhopper.PathWrapper;
@@ -42,10 +39,10 @@ public class Backend {
 	public static class ToWebbrowser {
 		LatLonDanger waypoints[];
 	}
-	
+
 	public static class returnValues {
 		PathWrapper bestPath;
-		String json;		
+		String json;
 	}
 
 	public static void main(String args[]) throws InterruptedException, IOException {
@@ -118,7 +115,7 @@ public class Backend {
 		JavaPairRDD<Double, Double> mapToPair = javaRDD
 				.mapToPair(row -> new Tuple2<Double, Double>(calculateCluster(horizontalClusterAnz, row.getDouble(1),
 						row.getDouble(2), latMax, latMin, lngMax, lngMin), row.getDouble(4)));
-		
+
 		// Reduzierung auf unterschiedliche Cluster
 		JavaPairRDD<Double, Double> reduceToHectar = mapToPair.reduceByKey((a, b) -> a + b);
 
@@ -131,10 +128,10 @@ public class Backend {
 
 			PathWrapper bestPath = helper.route(fromWebbrowser.start.lat, fromWebbrowser.start.lon,
 					fromWebbrowser.dest.lat, fromWebbrowser.dest.lon);
-			
+
 			ToWebbrowser routePointsToWeb = new ToWebbrowser();
 			routePointsToWeb.waypoints = new LatLonDanger[bestPath.getPoints().size()];
-			
+
 			// Speichern aller Wegpunkte zur Anzeige der Route auf der Webseite
 			for (int i = 0; i < bestPath.getPoints().size(); i++) {
 				routePointsToWeb.waypoints[i] = new LatLonDanger();
@@ -143,7 +140,8 @@ public class Backend {
 				routePointsToWeb.waypoints[i].danger = 0;
 			}
 
-			// Speichern nur jeweils eines Wegpunktes eines Clusters ein einer temporären HashMap
+			// Speichern nur jeweils eines Wegpunktes eines Clusters ein einer temporären
+			// HashMap
 			Map<String, GHPoint3D> tmp = new HashMap<>();
 			for (GHPoint3D point3d : bestPath.getPoints()) {
 				String key = "" + calculateCluster(horizontalClusterAnz, point3d.getLat(), point3d.getLon(), latMax,
@@ -169,15 +167,16 @@ public class Backend {
 					toWebBrowser.waypoints[i].danger = danger.doubleValue();
 				}
 			}
-			
-			// Rückgabe der Feuerpunkte auf der Route und aller Routenpunkte in zusammengefügtem JSON			
+
+			// Rückgabe der Feuerpunkte auf der Route und aller Routenpunkte in
+			// zusammengefügtem JSON
 			res.type("application/json");
-			
+
 			String firepoints = "\"firepoints\": " + gson.toJson(toWebBrowser);
 			String routepoints = "\"routepoints\": " + gson.toJson(routePointsToWeb);
-			
+
 			String returnJson = "{" + firepoints + ", " + routepoints + "}";
-			
+
 			return returnJson;
 		});
 

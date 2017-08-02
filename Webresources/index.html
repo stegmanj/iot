@@ -27,7 +27,6 @@
 	integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA=="
 	crossorigin=""></script>
 <script src="./js/jquery-3.2.1.js" type="text/javascript"></script>
-<!-- script src="./js/Leaflet.MakiMarkers.js" type="text/javascript"></script-->
 
 <style>
 .footer {
@@ -109,7 +108,6 @@
 			var popup = L.popup();
 			var markerA;
 			var markerB;
-			var fireMarker;
 			var fireCircle;
 			var routeCircle;
 			var clickCount = 0;
@@ -194,10 +192,7 @@
 						contentType : "application/json; charset=utf-8",
 						dataType : "json",
 						success : function(data) {
-
-							addFireMarker(data);
-							console.log(data)
-
+							addFireMarker(data)
 						},
 						error : function(errMsg) {
 							console.log(errMsg)
@@ -211,12 +206,7 @@
 
 				function addFireMarker(data) {
 					for ( var i in data.firepoints.waypoints) {
-
-						/*fireMarker = L
-								.marker(
-										[ data.waypoints[i].lat,
-												data.waypoints[i].lon ]).addTo(
-										mymap);*/
+						
 						fireCircle = L
 								.circle(
 										[
@@ -228,10 +218,6 @@
 											fillOpacity : 0.5,
 											radius : (data.firepoints.waypoints[i].danger)
 										}).addTo(mymap);
-
-						console.log(data.firepoints.waypoints[i].lat);
-						console.log(data.firepoints.waypoints[i].lon);
-						console.log(data);
 
 						//TODO ignore null data objects
 					}
@@ -247,10 +233,6 @@
 											fillOpacity : 0.5,
 											radius : 25
 										}).addTo(mymap);
-
-						console.log(data.routepoints.waypoints[i].lat);
-						console.log(data.routepoints.waypoints[i].lon);
-						console.log(data);
 					}
 					
 					mymap.setZoom(5);
