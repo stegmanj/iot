@@ -52,6 +52,7 @@ public class Backend {
 
 		Logging.setLoggingDefaults();
 
+		System.out.println("Loading Map of British Columbia...");
 		GraphhopperHelper helper = new GraphhopperHelper(
 				new File("src/main/resources/british-columbia-latest.osm.pbf"));
 
@@ -59,7 +60,6 @@ public class Backend {
 		JavaSparkContext sc = new JavaSparkContext(conf);
 
 		SQLContext sqlContext = new SQLContext(sc);
-		System.out.println("Loading Map of British Columbia...");
 		DataFrame df = sqlContext.read().format("com.databricks.spark.csv").option("inferSchema", "true")
 				.option("header", "true").load("src/main/resources/Wildfire_bc_2017_2.csv");
 
@@ -135,6 +135,7 @@ public class Backend {
 			ToWebbrowser routePointsToWeb = new ToWebbrowser();
 			routePointsToWeb.waypoints = new LatLonDanger[bestPath.getPoints().size()];
 			
+			// Speichern aller Wegpunkte zur Anzeige der Route auf der Webseite
 			for (int i = 0; i < bestPath.getPoints().size(); i++) {
 				routePointsToWeb.waypoints[i] = new LatLonDanger();
 				routePointsToWeb.waypoints[i].lat = bestPath.getPoints().getLat(i);
@@ -142,6 +143,7 @@ public class Backend {
 				routePointsToWeb.waypoints[i].danger = 0;
 			}
 
+			// Speichern nur jeweils eines Wegpunktes eines Clusters ein einer temporären HashMap
 			Map<String, GHPoint3D> tmp = new HashMap<>();
 			for (GHPoint3D point3d : bestPath.getPoints()) {
 				String key = "" + calculateCluster(horizontalClusterAnz, point3d.getLat(), point3d.getLon(), latMax,
@@ -168,6 +170,7 @@ public class Backend {
 				}
 			}
 			
+			// Rückgabe der Feuerpunkte auf der Route und aller Routenpunkte in zusammengefügtem JSON			
 			res.type("application/json");
 			
 			String firepoints = "\"firepoints\": " + gson.toJson(toWebBrowser);
