@@ -2,28 +2,68 @@
 <html>
 <head>
 
-<title>FireFighterZ</title>
+<title>NotiFires</title>
 
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
-<link rel="shortcut icon" type="image/x-icon"
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="shortcut icon" type="image/x-icon"
 	href="docs/images/favicon.ico" />
 
-<link rel="stylesheet"
+  <link rel="stylesheet"
 	href="https://unpkg.com/leaflet@1.1.0/dist/leaflet.css"
 	integrity="sha512-wcw6ts8Anuw10Mzh9Ytw4pylW8+NAD4ch3lqm9lzAsTxg0GFeJgoAtxuCLREZSC5lUXdVyo/7yfsqFjQ4S+aKw=="
 	crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"
+  <script src="https://unpkg.com/leaflet@1.1.0/dist/leaflet.js"
 	integrity="sha512-mNqn2Wg7tSToJhvHcqfzLMU6J4mkOImSPTxVZAdo+lcPlk+GhZmYgACEe0x35K7YzW1zJ7XyJV/TT1MrdXvMcA=="
 	crossorigin=""></script>
-<script src="http://code.jquery.com/jquery-3.2.1.slim.min.js"
+  <script src="http://code.jquery.com/jquery-3.2.1.slim.min.js"
 	integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
 	crossorigin="anonymous"></script>
 
-</head>
-<body>
+<style>
+.footer
+{
+    height: 30px;
+    background-color: black;
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100%;
+}
+</style>
 
+</head>
+
+<body>
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">NotiFires</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li><a href="#">Home</a></li>
+      <li class="active"><a href="#">WildFire Notification</a></li>
+      <li><a href="#">Download</a></li>
+      <li><a href="#">About Us</a></li>
+      <li><a href="#">Contact Us</a></li>
+    </ul>
+  </div>
+</nav>
+<div class="jumbotron text-center">
+  <h1>Wild Fire Notification</h1>
+  <p>Zoom & Click The Map To Begin Your Navigation!</p> 
+</div>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-3">
+    <h3>Routing Information</h3>
 	<p>
 		Start: <span id=printouta></span>
 	</p>
@@ -31,18 +71,28 @@
 		Destination: <span id=printoutb></span>
 	</p>
 	<p>
-		ClickCounter: <span id=clickprint></span>
+		Method: <span id=methodPrint></span>
 	</p>
 	<p>
-		Method: <span id=methodPrint></span>
+		ClickCounter: <span id=clickprint></span>
 	</p>
 	<p>
 		Lap: <span id=lapprint></span>
 	</p>
+    </div>
+    <div class="col-sm-8">
+      <h3>Map of British Columbia</h3>
+      <div id="mapid" style="width: 1024px; height: 768px;"></div>
+  </div>
+</div>
+<br /><br /><br />
+<footer class="footer">
+      <div class="container">
+        <p class="text-muted">Copyright &copy; NotiFires.com</p>
+      </div>
+</footer>
 
-
-	<div id="mapid" style="width: 800px; height: 600px;"></div>
-	<script>
+<script>
 		var mymap = L.map('mapid').setView([ 54.000000, -127.500000 ], 6);
 
 		L
@@ -136,7 +186,7 @@
 				
 				$.ajax({
 			        type: "POST",
-			        url: "http://localhost:4567/waypoints",
+			        url: "/waypoints",
 			        data: waypoints,
 			        contentType: "application/json; charset=utf-8",
 			        dataType: "json",
@@ -157,8 +207,8 @@
 		}
 
 		mymap.on('click', onMapClick);
-	</script>
-
+		
+</script>
 
 </body>
 </html>
