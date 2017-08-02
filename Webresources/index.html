@@ -206,7 +206,10 @@
 						contentType : "application/json; charset=utf-8",
 						dataType : "json",
 						success : function(data) {
+							
+							addFireMarker(data);
 							console.log(data)
+							
 						},
 						error : function(errMsg) {
 							console.log(errMsg)
@@ -223,6 +226,10 @@
 					alert("Error: Please refresh and try again! We couldn't resolve if this was the Start or Destination Click.");
 				}
 
+			}
+			
+			function addFireMarker(data) {
+				
 			}
 
 			mymap.on('click', onMapClick);
