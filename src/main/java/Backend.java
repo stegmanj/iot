@@ -58,7 +58,7 @@ public class Backend {
 
 		SQLContext sqlContext = new SQLContext(sc);
 		DataFrame df = sqlContext.read().format("com.databricks.spark.csv").option("inferSchema", "true")
-				.option("header", "true").load("src/main/resources/Wildfire_bc_2017_2.csv");
+				.option("header", "true").load("src/main/resources/Wildfire_bc_2017.csv");
 
 		JavaRDD<Row> javaRDD = df.javaRDD();
 
