@@ -119,9 +119,18 @@ public class CountExample2 {
 		// reduceToHectar.foreach(tuple -> System.out.println(tuple._1 + ": " +
 		// tuple._2));
 
+//		staticFiles.externalLocation("/Webresources");
+//		Spark.post("/test", (request, response) -> {
+//		    String a, b, c;
+//		    a = request.queryParams("txt_username");
+//		    b = request.queryParams("txt_password");
+//		    c = request.queryParams("txt_memberid");
+//		    return "Hallo Welt";
+//		});
+		
 		staticFiles.externalLocation("Webresources");
 		Spark.post("/waypoints", (req, res) -> {
-			System.out.println("in Post req entgegennahme");
+			System.out.println("in Post req");
 			Gson gson = new Gson();
 			FromWebbrowser fromWebbrowser = gson.fromJson(req.body(), FromWebbrowser.class);
 
@@ -138,6 +147,7 @@ public class CountExample2 {
 				double clusterId = calculateCluster(horizontalClusterAnz, bestPath.getPoints().getLat(i),
 						bestPath.getPoints().getLon(i), latMax, latMin, lngMax, lngMin);
 				JavaPairRDD<Double, Double> filtered = reduceToHectar.filter(entry -> entry._1 == clusterId);
+//				JavaPairRDD<Double, Double> redFiltered = filtered.reduceByKey((a, b) -> a + b);
 				filtered.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
 				
 				if (filtered.count() > 0) {
@@ -150,13 +160,14 @@ public class CountExample2 {
 					System.out.println("-------lon: " + bestPath.getPoints().getLon(i));
 					toWebBrowser.waypoints[i].danger = danger.doubleValue();
 					System.out.println("-------DANGER double: " + danger.doubleValue());
-				} else {
+				} /*else {
 					res.status(400);
 					return "Bad request";
-				}
+				}*/
 			}
 
 			res.type("application/json");
+			System.out.println("hallo" + gson.toJson(toWebBrowser));
 			return gson.toJson(toWebBrowser);
 		});
 
