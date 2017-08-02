@@ -113,6 +113,7 @@
 			var markerB;
 			var fireMarker;
 			var fireCircle;
+			var routeCircle;
 			var clickCount = 0;
 			var a = "Start";
 			var b = "Destination";
@@ -214,24 +215,54 @@
 				}
 
 				function addFireMarker(data) {
-					for ( var i in data.waypoints) {
+					for ( var i in data.firepoints.waypoints) {
 
 						/*fireMarker = L
 								.marker(
 										[ data.waypoints[i].lat,
 												data.waypoints[i].lon ]).addTo(
 										mymap);*/
-						fireCircle = L.circle([data.waypoints[i].lat,
-												data.waypoints[i].lon ], {
-											color: 'red',
-											fillColor: '#F03',
-											fillOpacity: 0.5,
-											radius: (data.waypoints[i].danger) 
+						fireCircle = L
+								.circle(
+										[
+												data.firepoints.waypoints[i].lat,
+												data.firepoints.waypoints[i].lon ],
+										{
+											color : 'red',
+											fillColor : '#F03',
+											fillOpacity : 0.5,
+											radius : (data.firepoints.waypoints[i].danger)
 										}).addTo(mymap);
-						console.log(data.waypoints[i].lat);
-						console.log(data.waypoints[i].lon);
+
+						console.log(data.firepoints.waypoints[i].lat);
+						console.log(data.firepoints.waypoints[i].lon);
+						console.log(data);
+
+						//TODO ignore null data objects
 					}
+					for ( var i in data.routepoints.waypoints) {
+						routeCircle = L
+								.circle(
+										[
+												data.routepoints.waypoints[i].lat,
+												data.routepoints.waypoints[i].lon ],
+										{
+											color : 'blue',
+											fillColor : '#F03',
+											fillOpacity : 0.5,
+											radius : 25
+										}).addTo(mymap);
+
+						console.log(data.routepoints.waypoints[i].lat);
+						console.log(data.routepoints.waypoints[i].lon);
+						console.log(data);
+					}
+					
+					mymap.setZoom(5);
+
 				}
+				
+				
 
 				//Throw Error Message if ClickCount Modulus is not between 0 or 1
 				if (clickCount % 2 > 1 || clickCount % 2 < 0) {

@@ -14,6 +14,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
+import org.mortbay.util.ajax.JSON;
 
 import com.google.gson.Gson;
 import com.graphhopper.PathWrapper;
@@ -23,7 +24,7 @@ import de.uniluebeck.itm.util.logging.Logging;
 import scala.Tuple2;
 import spark.Spark;
 
-public class CountExample2 {
+public class Backend {
 	public static class LatLon {
 		double lat;
 		double lon;
@@ -41,6 +42,11 @@ public class CountExample2 {
 	public static class ToWebbrowser {
 		LatLonDanger waypoints[];
 	}
+	
+	public static class returnValues {
+		PathWrapper bestPath;
+		String json;		
+	}
 
 	public static void main(String args[]) throws InterruptedException, IOException {
 
@@ -53,6 +59,7 @@ public class CountExample2 {
 		JavaSparkContext sc = new JavaSparkContext(conf);
 
 		SQLContext sqlContext = new SQLContext(sc);
+		System.out.println("Loading Map of British Columbia...");
 		DataFrame df = sqlContext.read().format("com.databricks.spark.csv").option("inferSchema", "true")
 				.option("header", "true").load("src/main/resources/Wildfire_bc_2017_2.csv");
 
@@ -84,14 +91,9 @@ public class CountExample2 {
 		});
 
 		// Speichern der Min- und Max-Werte in Variablen
-		System.out.println("LAT min " + minLatRow.getDouble(minLatRow.fieldIndex("LATITUDE")));
 		double latMin = minLatRow.getDouble(minLatRow.fieldIndex("LATITUDE"));
-		System.out.println("LAT max " + maxLatRow.getDouble(maxLatRow.fieldIndex("LATITUDE")));
 		double latMax = maxLatRow.getDouble(maxLatRow.fieldIndex("LATITUDE"));
-
-		System.out.println("LNG min " + minLngRow.getDouble(minLatRow.fieldIndex("LONGITUDE")));
 		double lngMin = minLngRow.getDouble(minLatRow.fieldIndex("LONGITUDE"));
-		System.out.println("LNG max " + maxLngRow.getDouble(maxLatRow.fieldIndex("LONGITUDE")));
 		double lngMax = maxLngRow.getDouble(maxLatRow.fieldIndex("LONGITUDE"));
 
 		// Berechnung der nördlichsten und südlichsten Distanz
@@ -110,52 +112,45 @@ public class CountExample2 {
 		// Einteilung in 50km-große Cluster
 		int horizontalClusterAnz = (int) (finalDist / 50);
 
-		System.out.println("Clusteranzahl: " + horizontalClusterAnz);
+		System.out.println("Horizontale Clusteranzahl: " + horizontalClusterAnz);
 
 		// Mapping der Cluster und ihrer brennenden Hectar in PairRDD
 		JavaPairRDD<Double, Double> mapToPair = javaRDD
 				.mapToPair(row -> new Tuple2<Double, Double>(calculateCluster(horizontalClusterAnz, row.getDouble(1),
 						row.getDouble(2), latMax, latMin, lngMax, lngMin), row.getDouble(4)));
+		
 		// Reduzierung auf unterschiedliche Cluster
 		JavaPairRDD<Double, Double> reduceToHectar = mapToPair.reduceByKey((a, b) -> a + b);
 
-		// reduceToHectar.foreach(tuple -> System.out.println(tuple._1 + ": " +
-		// tuple._2));
-
-		// staticFiles.externalLocation("/Webresources");
-		// Spark.post("/test", (request, response) -> {
-		// String a, b, c;
-		// a = request.queryParams("txt_username");
-		// b = request.queryParams("txt_password");
-		// c = request.queryParams("txt_memberid");
-		// return "Hallo Welt";
-		// });
-
 		staticFiles.externalLocation("Webresources");
 		Spark.post("/waypoints", (req, res) -> {
-			System.out.println("in Post req");
+			System.out.println("Received Post Request...");
 			Gson gson = new Gson();
-
-			System.out.println("json from web" + req.body());
 
 			FromWebbrowser fromWebbrowser = gson.fromJson(req.body(), FromWebbrowser.class);
 
 			PathWrapper bestPath = helper.route(fromWebbrowser.start.lat, fromWebbrowser.start.lon,
 					fromWebbrowser.dest.lat, fromWebbrowser.dest.lon);
+			
+			ToWebbrowser routePointsToWeb = new ToWebbrowser();
+			routePointsToWeb.waypoints = new LatLonDanger[bestPath.getPoints().size()];
+			
+			for (int i = 0; i < bestPath.getPoints().size(); i++) {
+				routePointsToWeb.waypoints[i] = new LatLonDanger();
+				routePointsToWeb.waypoints[i].lat = bestPath.getPoints().getLat(i);
+				routePointsToWeb.waypoints[i].lon = bestPath.getPoints().getLon(i);
+				routePointsToWeb.waypoints[i].danger = 0;
+			}
 
 			Map<String, GHPoint3D> tmp = new HashMap<>();
 			for (GHPoint3D point3d : bestPath.getPoints()) {
 				String key = "" + calculateCluster(horizontalClusterAnz, point3d.getLat(), point3d.getLon(), latMax,
 						latMin, lngMax, lngMin);
 				tmp.put(key, point3d);
-				System.out.println("Adding " + key + " with " +point3d.toString());
 			}
 
 			ToWebbrowser toWebBrowser = new ToWebbrowser();
 			toWebBrowser.waypoints = new LatLonDanger[tmp.size()];
-
-			System.out.println("toWebBrowser.waypoints " + toWebBrowser.waypoints);
-			System.out.println("fromWebbrowser " + fromWebbrowser);
 
 			int i = -1;
 			for (GHPoint3D point : tmp.values()) {
@@ -163,34 +158,29 @@ public class CountExample2 {
 				double clusterId = calculateCluster(horizontalClusterAnz, point.getLat(), point.getLon(), latMax,
 						latMin, lngMax, lngMin);
 				JavaPairRDD<Double, Double> filtered = reduceToHectar.filter(entry -> entry._1 == clusterId);
-				// JavaPairRDD<Double, Double> redFiltered = filtered.reduceByKey((a, b) -> a +
-				// b);
-				filtered.foreach(tuple -> System.out.println(tuple._1 + ": " + tuple._2));
 
 				if (filtered.count() > 0) {
 					Double danger = filtered.first()._2;
-					System.out.println("-------DANGER: " + danger);
 					toWebBrowser.waypoints[i] = new LatLonDanger();
 					toWebBrowser.waypoints[i].lat = bestPath.getPoints().getLat(i);
-					System.out.println("-------lat: " + bestPath.getPoints().getLat(i));
 					toWebBrowser.waypoints[i].lon = bestPath.getPoints().getLon(i);
-					System.out.println("-------lon: " + bestPath.getPoints().getLon(i));
 					toWebBrowser.waypoints[i].danger = danger.doubleValue();
-					System.out.println("-------DANGER double: " + danger.doubleValue());
-				} /*
-					 * else { res.status(400); return "Bad request"; }
-					 */
+				}
 			}
-
+			
 			res.type("application/json");
-			System.out.println("hallo" + gson.toJson(toWebBrowser));
-			return gson.toJson(toWebBrowser);
+			
+			String firepoints = "\"firepoints\": " + gson.toJson(toWebBrowser);
+			String routepoints = "\"routepoints\": " + gson.toJson(routePointsToWeb);
+			
+			String returnJson = "{" + firepoints + ", " + routepoints + "}";
+			
+			return returnJson;
 		});
 
 		while (true) {
 			Thread.sleep(1000);
 		}
-
 	}
 
 	private static double distanceInKm(double lat1, double lon1, double lat2, double lon2) {
@@ -213,29 +203,10 @@ public class CountExample2 {
 
 	}
 
-	private static double calculateLatAndLng(double cluster) {
-
-		double[][] wps = { { 49.1470, -121.3056 }, { 49.5760, -121.8105 }, { 49.3853, -121.3162 },
-				{ 52.9440, -120.8895 } };
-		double lat = 0.0;
-		double lng;
-
-		return lat;
-	}
-
 	private static double calculateCluster(int horizontalClusterAnz, double tmpLat, double tmpLng, double latMax,
 			double latMin, double lngMax, double lngMin) {
 		double lng = lngMin;
 		double lat = latMax;
-		// double horizontalCluster = 25;
-		// double stepVertical = 0.5;
-		// double stepHorizontal = 1;
-		// double lngMax = -116;
-		// double lngMin = -140;
-		// double latMax = 60;
-		// double latMin = 48.5;
-		// tmpLat = -109;
-		// tmpLng = 40;
 
 		double stepHorizontal = (lngMax - lngMin) / horizontalClusterAnz;
 		double stepVertical = (latMax - latMin) / horizontalClusterAnz;
@@ -247,17 +218,13 @@ public class CountExample2 {
 				break;
 			lng = lng + stepHorizontal;
 			idCtr++;
-			// System.out.println("in first while" + idCtr);
 		}
 		while (lat >= tmpLat + stepVertical) {
 			if (lat < latMin + stepVertical)
 				break;
 			lat = lat - stepVertical;
 			idCtr = idCtr + horizontalClusterAnz;
-			// System.out.println("in second while" + idCtr);
 		}
-
-		// System.out.println(idCtr);
 		return idCtr;
 	}
 }
