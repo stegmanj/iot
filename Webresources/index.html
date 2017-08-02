@@ -43,7 +43,7 @@
 
 </head>
 
-<body>
+<body onresize="sizeWin()" onload="sizeWin()">
 	<nav class="navbar navbar-inverse">
 		<div class="container-fluid">
 			<div class="navbar-header">
@@ -84,7 +84,7 @@
 			</div>
 			<div class="col-sm-8">
 				<h3>Map of British Columbia</h3>
-				<div id="mapid" style="width: 1024px; height: 768px;"></div>
+				<div id="mapid"></div>
 			</div>
 		</div>
 		<br />
@@ -97,6 +97,12 @@
 		</footer>
 
 		<script>
+		
+			function sizeWin() {
+				$('#mapid').height($(window).height());
+				$('#mapid').width($(window).width()-400);
+			}	
+		
 			var mymap = L.map('mapid').setView([ 54.000000, -127.500000 ], 6);
 
 			L
