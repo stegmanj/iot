@@ -119,7 +119,7 @@ public class CountExample2 {
 		// reduceToHectar.foreach(tuple -> System.out.println(tuple._1 + ": " +
 		// tuple._2));
 
-		staticFiles.externalLocation("Webresources");
+		staticFiles.externalLocation("/Webresources");
 		Spark.post("/waypoints", (req, res) -> {
 			System.out.println("in Post req entgegennahme");
 			Gson gson = new Gson();
