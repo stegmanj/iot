@@ -70,13 +70,16 @@
 				<p>
 					<b>Destination: </b> <span id=printoutb></span>
 				</p>
-				<p>
+				<p style="display: none">
 					<b>Method: </b> <span id=methodPrint></span>
 				</p>
-				<p>
+				<p style="display: none">
 					<b>ClickCounter: </b> <span id=clickprint></span>
 				</p>
-				
+				<p>
+					<b>Hectare Fire on Route: </b> <span id="hectare"></span>
+				</p>
+
 			</div>
 			<div class="col-sm-9">
 				<h3>Map of British Columbia</h3>
@@ -87,12 +90,15 @@
 		<br /> <br /> <br />
 		<footer class="footer">
 			<div class="container">
-				<p class="text-muted">Copyright &copy; NotiFires.com</p>
+				<p class="text-muted">Copyright &copy; NotiFires.com -
+					Impressum: DHBW Summer School 2017 - Coblitzallee 1-9 Mannheim,
+					Germany - Made with so much &#x2764; in Oshawa.</p>
 			</div>
 		</footer>
 
 		<script>
 			var mymap = L.map('mapid').setView([ 54.000000, -127.500000 ], 6);
+			L.control.scale().addTo(mymap);
 
 			L
 					.tileLayer(
@@ -110,6 +116,7 @@
 			var markerB;
 			var fireCircle;
 			var routeCircle;
+			var markerGroup = L.layerGroup().addTo(mymap);
 			var clickCount = 0;
 			var a = "Start";
 			var b = "Destination";
@@ -154,7 +161,7 @@
 					if (clickCount > 2) {
 						//Remove marker
 						mymap.removeLayer(markerA);
-						mymap.removeLayer(fireMarker);
+						markerGroup.clearLayers();
 
 						//Switch marker
 						markerA = markerB;
@@ -185,19 +192,25 @@
 						}
 					};
 
-					$.ajax({
-						type : "POST",
-						url : "http://localhost:4567/waypoints",
-						data : JSON.stringify(waypoints),
-						contentType : "application/json; charset=utf-8",
-						dataType : "json",
-						success : function(data) {
-							addFireMarker(data)
-						},
-						error : function(errMsg) {
-							console.log(errMsg)
-						}
-					});
+					var group = new L.featureGroup([ markerA, markerB ]);
+					mymap.fitBounds(group.getBounds());
+
+					$
+							.ajax({
+								type : "POST",
+								url : "http://localhost:4567/waypoints",
+								data : JSON.stringify(waypoints),
+								contentType : "application/json; charset=utf-8",
+								dataType : "json",
+								success : function(data) {
+									addRouteMarker(data);
+									addFireMarker(data);
+								},
+								error : function(errMsg) {
+									console.log(errMsg);
+									alert("There are no nearby streets at your start or destination nodes. Please choose other nodes.");
+								}
+							});
 
 					//Printout
 					document.getElementById("printoutb").innerHTML = bCor;
@@ -205,8 +218,11 @@
 				}
 
 				function addFireMarker(data) {
+					var hectare = 0.0;
 					for ( var i in data.firepoints.waypoints) {
-						
+						if (data.firepoints.waypoints[i] === null) {
+							continue;
+						}
 						fireCircle = L
 								.circle(
 										[
@@ -217,29 +233,33 @@
 											fillColor : '#F03',
 											fillOpacity : 0.5,
 											radius : (data.firepoints.waypoints[i].danger)
-										}).addTo(mymap);
-
-						//TODO ignore null data objects
+										}).addTo(markerGroup);
+						hectare = hectare + data.firepoints.waypoints[i].danger;
 					}
-					for ( var i in data.routepoints.waypoints) {
-						routeCircle = L
-								.circle(
-										[
-												data.routepoints.waypoints[i].lat,
-												data.routepoints.waypoints[i].lon ],
-										{
-											color : 'blue',
-											fillColor : 'blue',
-											fillOpacity : 0.5,
-											radius : 25
-										}).addTo(mymap);
-					}
-					
-					mymap.setZoom(5);
 
+					if (parseInt(hectare) != 0) {
+						$("#hectare").text(
+								"There are " + parseInt(hectare)
+										+ " hectare fire on your route!");
+					} else {
+						$("#hectare")
+								.text(
+										"There is no fire on your route! Have a nice journey!");
+					}
 				}
-				
-				
+
+				function addRouteMarker(data) {
+					for ( var i in data.routepoints.waypoints) {
+						routeCircle = L.circle(
+								[ data.routepoints.waypoints[i].lat,
+										data.routepoints.waypoints[i].lon ], {
+									color : 'blue',
+									fillColor : 'blue',
+									fillOpacity : 0.5,
+									radius : 25
+								}).addTo(markerGroup);
+					}
+				}
 
 				//Throw Error Message if ClickCount Modulus is not between 0 or 1
 				if (clickCount % 2 > 1 || clickCount % 2 < 0) {

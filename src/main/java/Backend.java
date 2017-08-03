@@ -158,13 +158,12 @@ public class Backend {
 				double clusterId = calculateCluster(horizontalClusterAnz, point.getLat(), point.getLon(), latMax,
 						latMin, lngMax, lngMin);
 				JavaPairRDD<Double, Double> filtered = reduceToHectar.filter(entry -> entry._1 == clusterId);
-				
 
 				if (filtered.count() > 0) {
 					Double danger = filtered.first()._2;
 					toWebBrowser.waypoints[i] = new LatLonDanger();
-					toWebBrowser.waypoints[i].lat = bestPath.getPoints().getLat(i);
-					toWebBrowser.waypoints[i].lon = bestPath.getPoints().getLon(i);
+					toWebBrowser.waypoints[i].lat = point.lat;
+					toWebBrowser.waypoints[i].lon = point.lon;
 					toWebBrowser.waypoints[i].danger = danger.doubleValue();
 				}
 			}
