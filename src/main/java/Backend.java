@@ -158,6 +158,7 @@ public class Backend {
 				double clusterId = calculateCluster(horizontalClusterAnz, point.getLat(), point.getLon(), latMax,
 						latMin, lngMax, lngMin);
 				JavaPairRDD<Double, Double> filtered = reduceToHectar.filter(entry -> entry._1 == clusterId);
+				
 
 				if (filtered.count() > 0) {
 					Double danger = filtered.first()._2;
@@ -184,37 +185,46 @@ public class Backend {
 			Thread.sleep(1000);
 		}
 	}
-
+	
+	//berechnen der Distanz zweier Koordinaten mit Latitude and Longitude
 	private static double distanceInKm(double lat1, double lon1, double lat2, double lon2) {
 
 		int radius = 6371;
 		double x;
-
+		
+		//Konvertieren in Radianten (Länge des entsprechenden Einheitskreis)
 		double lat = Math.toRadians(lat2 - lat1);
 		double lon = Math.toRadians(lon2 - lon1);
-
+		
+		//Berechnen der Distanz mithilfe trigonometrischer Funktionen
 		double a = Math.sin(lat / 2) * Math.sin(lat / 2) + Math.cos(Math.toRadians(lat1))
 				* Math.cos(Math.toRadians(lat2)) * Math.sin(lon / 2) * Math.sin(lon / 2);
 		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 		double d = radius * c;
-
+		
+		//Runden auf einen absoluten Wert
 		x = Math.abs(d);
 
 		System.out.println("Abstand beträgt: " + x);
 		return x;
 
 	}
-
+	
+	//Berechnen der Cluster und einordnen von Punkten (Koordinaten) in das Cluster
 	private static double calculateCluster(int horizontalClusterAnz, double tmpLat, double tmpLng, double latMax,
 			double latMin, double lngMax, double lngMin) {
+		
+		//maximale und minimale Longitude und Latitude aus CSV File
 		double lng = lngMin;
 		double lat = latMax;
-
+		
+		// Einteilung in Cluster (50km breite)
 		double stepHorizontal = (lngMax - lngMin) / horizontalClusterAnz;
 		double stepVertical = (latMax - latMin) / horizontalClusterAnz;
 
 		double idCtr = 1;
-
+		
+		//Einordnen in Cluster
 		while (lng <= tmpLng - stepHorizontal) {
 			if (lng > lngMax - stepHorizontal)
 				break;
